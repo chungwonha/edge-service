@@ -3,10 +3,7 @@ server:
   netty:
     connection-timeout: 5s
   shutdown: graceful
-
 spring:
-  lifecycle:
-    timeout-per-shutdown-phase: 15s
   cloud:
     gateway:
       routes:
@@ -14,26 +11,16 @@ spring:
           uri: ${CATALOG_SERVICE_URL:http://localhost:9002}/books
           predicates:
             - Path=/books/**
-        - id: order-route
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: catalogCircuitBreaker
+                fallbackUri: forward:/catalog-fallback
+        - id: order_service
           uri: ${ORDER_SERVICE_URL:http://localhost:9003}/orders
           predicates:
             - Path=/orders/**
-      httpclient:
-        connect-timeout: 5000
-        response-timeout: 5s
-        pool:
-          type: elastic
-          max-idle-time: 15s
-          max-life-time: 60s
-      default-filters:
-        - name: Retry
-          args:
-            retries: 3
-            methods: GET
-            series: SERVER_ERROR
-            exceptions: java.io.IOException, java.util.concurrent.TimeoutException
-            backoff:
-              firstBackoff: 50ms
-              maxBackOff: 500ms
-              factor: 2
-              basedOnPreviousValue: false
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: orderCircuitBreaker
