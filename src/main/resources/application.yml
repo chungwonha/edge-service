@@ -24,3 +24,6 @@ spring:
             - name: CircuitBreaker
               args:
                 name: orderCircuitBreaker
+logging:
+  level:
+    io.github.resilience4j: DEBUG
